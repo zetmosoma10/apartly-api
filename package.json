@@ -11,13 +11,18 @@
   "author": "Zet Mosoma",
   "license": "ISC",
   "dependencies": {
+    "cloudinary": "^2.7.0",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "mongoose": "^8.18.3"
+    "mongoose": "^8.18.3",
+    "multer": "^2.0.2",
+    "streamifier": "^0.1.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.6.0",
+    "@types/streamifier": "^0.1.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.2"
   }

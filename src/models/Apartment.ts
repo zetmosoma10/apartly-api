@@ -35,10 +35,18 @@ const apartmentSchema = new Schema(
       required: true,
     },
     amenities: [String],
-    images: {
-      type: [String],
-      required: true,
-    },
+    images: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        public_id: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     status: {
       type: String,
       enum: ["available", "rented", "maintenance"],

@@ -1,9 +1,10 @@
 import express from "express";
+import apartmentRoutes from "./routes/apartmentRoutes";
 
 const app = express();
 
-app.get("/", (req, res) => {
-  res.send([{ id: 1, name: "Zet" }]);
-});
+app.use(express.json());
+
+app.use("/api/apartments", apartmentRoutes);
 
 export default app;
