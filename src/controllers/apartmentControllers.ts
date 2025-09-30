@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
 import streamifier from "streamifier";
+import AppError from "../utils/AppError";
 
 const streamUpload = (fileBuffer: Buffer, folder: string) => {
   return new Promise((resolve, reject) => {
@@ -16,7 +17,7 @@ const streamUpload = (fileBuffer: Buffer, folder: string) => {
   });
 };
 
-export const createApartment: RequestHandler = async (req, res) => {
+export const createApartment: RequestHandler = async (req, res, next) => {
   try {
     // upload images
     const uploadedImages = [];
@@ -46,12 +47,11 @@ export const createApartment: RequestHandler = async (req, res) => {
       apartment,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+    next(new AppError("Unexpected error", 500));
   }
 };
 
-export const getAllApartments: RequestHandler = async (req, res) => {
+export const getAllApartments: RequestHandler = async (req, res, next) => {
   try {
     const apartments = await Apartment.find();
 
@@ -60,9 +60,27 @@ export const getAllApartments: RequestHandler = async (req, res) => {
       apartments,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: error,
+    next(new AppError("Unexpected error", 500));
+  }
+};
+
+export const getApartment: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id);
+    if (!apartment) {
+      next(new AppError("Apartment not found", 404));
+      return;
+    }
+
+    res.status(200).send({
+      success: true,
+      apartment,
     });
+  } catch (error) {
+    next(new AppError("Unexpected error", 500));
   }
 };

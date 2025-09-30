@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createApartment,
   getAllApartments,
+  getApartment,
 } from "../controllers/apartmentControllers";
 import uploadApartmentImages from "../configs/multer";
 
@@ -11,5 +12,7 @@ router
   .route("/")
   .post(uploadApartmentImages, createApartment)
   .get(getAllApartments);
+
+router.route("/:id").get(getApartment);
 
 export default router;
