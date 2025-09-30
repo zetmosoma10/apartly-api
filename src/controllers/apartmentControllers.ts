@@ -3,6 +3,7 @@ import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
 import streamifier from "streamifier";
 import AppError from "../utils/AppError";
+import { apartmentSchema } from "./validationSchemas";
 
 const streamUpload = (fileBuffer: Buffer, folder: string) => {
   return new Promise((resolve, reject) => {
@@ -19,6 +20,12 @@ const streamUpload = (fileBuffer: Buffer, folder: string) => {
 
 export const createApartment: RequestHandler = async (req, res, next) => {
   try {
+    const results = apartmentSchema.safeParse(req.body);
+    if (!results.success) {
+      next(new AppError("Invalid input(s)", 400, results.error.formErrors));
+      return;
+    }
+
     // upload images
     const uploadedImages = [];
     for (const file of req.files as Express.Multer.File[]) {
@@ -30,15 +37,7 @@ export const createApartment: RequestHandler = async (req, res, next) => {
     }
 
     const apartment = await Apartment.create({
-      title: req.body.title,
-      description: req.body.description,
-      price: req.body.price,
-      bedrooms: req.body.bedrooms,
-      bathrooms: req.body.bathrooms,
-      city: req.body.city,
-      address: req.body.address,
-      amenities: req.body.amenities.split(","),
-      type: req.body.type,
+      ...results.data,
       images: uploadedImages,
     });
 
@@ -57,6 +56,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
 
     res.status(200).send({
       success: true,
+      count: apartments.length,
       apartments,
     });
   } catch (error) {

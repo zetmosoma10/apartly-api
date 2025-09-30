@@ -11,9 +11,9 @@ const developmentError = (error: any, res: Response) => {
       error,
     });
   } else {
-    res.status(error.status).send({
+    res.status(error.status || 500).send({
       success: false,
-      message: error.message,
+      message: error.message || "Unexpected error",
       error,
     });
   }
