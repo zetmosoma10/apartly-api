@@ -46,7 +46,7 @@ export const createApartment: RequestHandler = async (req, res, next) => {
       apartment,
     });
   } catch (error) {
-    next(new AppError("Unexpected error", 500));
+    next(error);
   }
 };
 
@@ -60,7 +60,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
       apartments,
     });
   } catch (error) {
-    next(new AppError("Unexpected error", 500));
+    next(error);
   }
 };
 
@@ -81,7 +81,7 @@ export const getApartment: RequestHandler<{ id: string }> = async (
       apartment,
     });
   } catch (error) {
-    next(new AppError("Unexpected error", 500));
+    next(error);
   }
 };
 
@@ -102,7 +102,6 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       return;
     }
 
-    console.log(results.data);
 
     const apartment = await Apartment.findByIdAndUpdate(
       req.params.id,
@@ -119,6 +118,27 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       apartment,
     });
   } catch (error) {
-    next(new AppError("Unexpected error", 500));
+    next(error);
   }
 };
+
+export const deleteApartment:RequestHandler<{ id: string }> =async (req,res,next) => {
+  try {
+
+    const apartment = await Apartment.findById(req.params.id);
+    if (!apartment) {
+      next(new AppError("Apartment not found", 404));
+      return;
+    }
+
+    const images: {url: string, public_id:string}[] = apartment.images
+    await Promise.allSettled(images.map(img => cloudinary.uploader.destroy(img.public_id)))
+
+    await apartment.deleteOne()
+
+    res.status(204).send();
+
+  } catch (error) {
+    next(error);
+  }
+}

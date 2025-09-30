@@ -4,6 +4,7 @@ import {
   getAllApartments,
   getApartment,
   updateApartment,
+  deleteApartment,
 } from "../controllers/apartmentControllers";
 import uploadApartmentImages from "../configs/multer";
 
@@ -14,6 +15,10 @@ router
   .post(uploadApartmentImages, createApartment)
   .get(getAllApartments);
 
-router.route("/:id").get(getApartment).patch(updateApartment);
+router
+  .route("/:id")
+  .get(getApartment)
+  .patch(updateApartment)
+  .delete(deleteApartment);
 
 export default router;
