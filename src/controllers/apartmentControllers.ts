@@ -50,3 +50,19 @@ export const createApartment: RequestHandler = async (req, res) => {
     res.status(500).send(error);
   }
 };
+
+export const getAllApartments: RequestHandler = async (req, res) => {
+  try {
+    const apartments = await Apartment.find();
+
+    res.status(200).send({
+      success: true,
+      apartments,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: error,
+    });
+  }
+};
