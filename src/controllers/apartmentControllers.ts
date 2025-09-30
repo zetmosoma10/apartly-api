@@ -3,7 +3,7 @@ import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
 import streamifier from "streamifier";
 import AppError from "../utils/AppError";
-import { apartmentSchema } from "./validationSchemas";
+import { apartmentSchema, updateApartmentSchema } from "./validationSchemas";
 
 const streamUpload = (fileBuffer: Buffer, folder: string) => {
   return new Promise((resolve, reject) => {
@@ -71,6 +71,44 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 ) => {
   try {
     const apartment = await Apartment.findById(req.params.id);
+    if (!apartment) {
+      next(new AppError("Apartment not found", 404));
+      return;
+    }
+
+    res.status(200).send({
+      success: true,
+      apartment,
+    });
+  } catch (error) {
+    next(new AppError("Unexpected error", 500));
+  }
+};
+
+export const updateApartment: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    if (req.body.images) {
+      next(new AppError("Cannot update images with this route", 400));
+      return;
+    }
+
+    const results = updateApartmentSchema.safeParse(req.body);
+    if (!results.success) {
+      next(new AppError("Invalid input(s)", 400, results.error.formErrors));
+      return;
+    }
+
+    console.log(results.data);
+
+    const apartment = await Apartment.findByIdAndUpdate(
+      req.params.id,
+      results.data,
+      { new: true, runValidators: true }
+    );
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
       return;
