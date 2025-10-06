@@ -24,8 +24,8 @@ export const apartmentSchema = z.object({
     "studio",
     "bachelor",
     "1-bedroom",
-    "2-bedroom",
-    "3-bedroom",
+    "2-bedrooms",
+    "3-bedrooms",
     "other",
   ]),
   amenities: z

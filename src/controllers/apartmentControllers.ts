@@ -43,7 +43,7 @@ export const createApartment: RequestHandler = async (req, res, next) => {
 
     res.status(201).send({
       success: true,
-      apartment,
+      results: apartment,
     });
   } catch (error) {
     next(error);
@@ -57,7 +57,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
     res.status(200).send({
       success: true,
       count: apartments.length,
-      apartments,
+      results: apartments,
     });
   } catch (error) {
     next(error);
@@ -78,7 +78,7 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 
     res.status(200).send({
       success: true,
-      apartment,
+      results: apartment,
     });
   } catch (error) {
     next(error);
@@ -115,7 +115,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
 
     res.status(200).send({
       success: true,
-      apartment,
+      results: apartment,
     });
   } catch (error) {
     next(error);
