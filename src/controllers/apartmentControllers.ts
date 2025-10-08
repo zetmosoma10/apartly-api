@@ -3,7 +3,10 @@ import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
 import streamifier from "streamifier";
 import AppError from "../utils/AppError";
-import { apartmentSchema, updateApartmentSchema } from "./validationSchemas";
+import {
+  apartmentSchema,
+  updateApartmentSchema,
+} from "../validations/apartmentSchemas";
 
 const streamUpload = (fileBuffer: Buffer, folder: string) => {
   return new Promise((resolve, reject) => {
@@ -120,7 +123,6 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
     next(error);
   }
 };
-
 
 export const deleteApartment: RequestHandler<{ id: string }> = async (
   req,
