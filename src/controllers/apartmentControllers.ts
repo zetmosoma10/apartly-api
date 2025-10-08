@@ -102,7 +102,6 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       return;
     }
 
-
     const apartment = await Apartment.findByIdAndUpdate(
       req.params.id,
       results.data,
@@ -122,23 +121,28 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
   }
 };
 
-export const deleteApartment:RequestHandler<{ id: string }> =async (req,res,next) => {
-  try {
 
+export const deleteApartment: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
     const apartment = await Apartment.findById(req.params.id);
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
       return;
     }
 
-    const images: {url: string, public_id:string}[] = apartment.images
-    await Promise.allSettled(images.map(img => cloudinary.uploader.destroy(img.public_id)))
+    const images: { url: string; public_id: string }[] = apartment.images;
+    await Promise.allSettled(
+      images.map((img) => cloudinary.uploader.destroy(img.public_id))
+    );
 
-    await apartment.deleteOne()
+    await apartment.deleteOne();
 
     res.status(204).send();
-
   } catch (error) {
     next(error);
   }
-}
+};

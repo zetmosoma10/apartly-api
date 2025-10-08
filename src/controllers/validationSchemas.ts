@@ -73,12 +73,7 @@ export const updateApartmentSchema = z.object({
     .optional(),
   type: z
     .enum([
-      "studio",
-      "bachelor",
-      "1-bedroom",
-      "2-bedroom",
-      "3-bedroom",
-      "other",
+      "1-bedroom", "2-bedrooms", "3-bedrooms", "studio", "bachelor", "other"
     ])
     .optional(),
   amenities: z

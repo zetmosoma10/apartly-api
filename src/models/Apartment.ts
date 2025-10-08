@@ -55,12 +55,7 @@ const apartmentSchema = new Schema(
     type: {
       type: String,
       enum: [
-        "studio",
-        "bachelor",
-        "1-bedroom",
-        "2-bedrooms",
-        "3-bedrooms",
-        "other",
+        "1-bedroom", "2-bedrooms", "3-bedrooms", "studio", "bachelor", "other"
       ],
       required: true,
     },
