@@ -66,7 +66,7 @@ const handleTokenExpireError = (err: any) => {
 // ? MIDDLEWARE
 const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   // ****
-  error.status = error.status || 500;
+  error.status = error.status;
 
   if (env.NODE_ENV === "development") {
     developmentError(error, res);

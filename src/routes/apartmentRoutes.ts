@@ -7,18 +7,19 @@ import {
   deleteApartment,
 } from "../controllers/apartmentControllers";
 import uploadApartmentImages from "../configs/multer";
+import protectRoute from "../middleware/protectRouteHandlers";
 
 const router = Router();
 
 router
   .route("/")
-  .post(uploadApartmentImages, createApartment)
+  .post(protectRoute, uploadApartmentImages, createApartment)
   .get(getAllApartments);
 
 router
   .route("/:id")
   .get(getApartment)
-  .patch(updateApartment)
-  .delete(deleteApartment);
+  .patch(protectRoute, updateApartment)
+  .delete(protectRoute, deleteApartment);
 
 export default router;
