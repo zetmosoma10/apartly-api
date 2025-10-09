@@ -9,14 +9,14 @@ const userSchema = new Schema(
     firstName: {
       type: String,
       required: [true, "firstName is required"],
-      minlength: [4, "firstName too short"],
+      minlength: [1, "firstName too short"],
       maxlength: [255, "firstName too long"],
       trim: true,
     },
     lastName: {
       type: String,
       required: [true, "lastName is required"],
-      minlength: [4, "lastName too short"],
+      minlength: [1, "lastName too short"],
       maxlength: [255, "lastName too long"],
       trim: true,
     },
