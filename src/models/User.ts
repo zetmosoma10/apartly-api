@@ -38,6 +38,7 @@ const userSchema = new Schema(
       required: [true, "password is required"],
       minlength: [4, "password too short"],
       maxlength: [255, "password too long"],
+      select: false,
     },
     role: {
       type: String,
@@ -80,6 +81,14 @@ userSchema.methods.generateJwt = function (): string {
       expiresIn: "1d",
     }
   );
+};
+
+// * COMPARE PASSWORD
+userSchema.methods.isPasswordsTheSame = async function (
+  password: string,
+  hashPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(password, hashPassword);
 };
 
 const User = model<UserDocument>("User", userSchema);

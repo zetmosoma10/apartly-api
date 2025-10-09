@@ -10,4 +10,8 @@ export type UserDocument = {
     public_url: string;
   };
   generateJwt: () => string;
+  isPasswordsTheSame: (
+    password: string,
+    hashedPassword: string
+  ) => Promise<boolean>;
 };
