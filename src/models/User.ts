@@ -1,5 +1,6 @@
 import { env } from "node:process";
 import { model, Schema } from "mongoose";
+import { UserDocument } from "../entities/UserDocument";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -81,6 +82,6 @@ userSchema.methods.generateJwt = function (): string {
   );
 };
 
-const User = model("User", userSchema);
+const User = model<UserDocument>("User", userSchema);
 
 export default User;
