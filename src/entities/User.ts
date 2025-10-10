@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export type UserDocument = {
+export type User = {
   _id: Types.ObjectId;
   firstName: string;
   lastName: string;
@@ -12,9 +12,4 @@ export type UserDocument = {
     url: string;
     public_url: string;
   };
-  generateJwt?: () => string;
-  isPasswordsTheSame?: (
-    password: string,
-    hashedPassword: string
-  ) => Promise<boolean>;
 };

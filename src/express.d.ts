@@ -1,10 +1,10 @@
-import { Types } from "mongoose";
 import multer from "multer";
+import { User } from "./entities/User";
 
 declare global {
   namespace Express {
     interface Request {
-      userId?: Types.ObjectId;
+      user?: User;
       file?: multer.File;
     }
   }

@@ -3,8 +3,9 @@ import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import JwtPayload from "../entities/jwtPayload";
 import AppError from "../utils/AppError";
+import User from "../models/User";
 
-const protectRoute: RequestHandler = async (req, res, next) => {
+export const protectRoute: RequestHandler = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) {
@@ -23,13 +24,16 @@ const protectRoute: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    // * CHECK IF PASSWORD HAS NOT BEEN CHANGED AFTER TOKEN BEEN ISSUED
+    // * FETCH USER FROM DB
+    const user = await User.findById(decodedJwt._id);
+    if (!user) {
+      next(new AppError("User not found", 401));
+      return;
+    }
 
-    req.userId = decodedJwt._id;
+    req.user = user;
     next();
   } catch (error) {
     next(error);
   }
 };
-
-export default protectRoute;

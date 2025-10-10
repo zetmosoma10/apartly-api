@@ -7,7 +7,7 @@ import {
   deleteApartment,
 } from "../controllers/apartmentControllers";
 import uploadApartmentImages from "../configs/multer";
-import protectRoute from "../middleware/protectRouteHandlers";
+import { protectRoute } from "../middleware/protectRouteHandlers";
 
 const router = Router();
 
