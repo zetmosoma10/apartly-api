@@ -37,3 +37,20 @@ export const protectRoute: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+export const authorizeRoute: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  const user = req.user;
+
+  const selectedRoles = ['landlord','admin']
+
+  if (!selectedRoles.includes(user?.role!)) {
+    next(new AppError("Access denied", 403));
+    return;
+  }
+
+  next();
+};
