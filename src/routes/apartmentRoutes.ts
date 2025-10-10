@@ -12,6 +12,7 @@ import {
   protectRoute,
   authorizeRoute,
 } from "../middleware/protectRouteHandlers";
+import validateObjectId from "../middleware/validateObjectId";
 
 const router = Router();
 
@@ -24,8 +25,8 @@ router.route("/me").get(protectRoute, authorizeRoute, getAllUserApartments);
 
 router
   .route("/:id")
-  .get(getApartment)
-  .patch(protectRoute, authorizeRoute, updateApartment)
-  .delete(protectRoute, authorizeRoute, deleteApartment);
+  .get(validateObjectId, getApartment)
+  .patch(protectRoute, authorizeRoute, validateObjectId, updateApartment)
+  .delete(protectRoute, authorizeRoute, validateObjectId, deleteApartment);
 
 export default router;
