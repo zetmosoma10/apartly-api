@@ -41,6 +41,7 @@ export const createApartment: RequestHandler = async (req, res, next) => {
 
     const apartment = await Apartment.create({
       ...results.data,
+      landlord: req.user?._id,
       images: uploadedImages,
     });
 
@@ -56,6 +57,20 @@ export const createApartment: RequestHandler = async (req, res, next) => {
 export const getAllApartments: RequestHandler = async (req, res, next) => {
   try {
     const apartments = await Apartment.find();
+
+    res.status(200).send({
+      success: true,
+      count: apartments.length,
+      results: apartments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllUserApartments: RequestHandler = async (req, res, next) => {
+  try {
+    const apartments = await Apartment.find({ landlord: req.user?._id });
 
     res.status(200).send({
       success: true,

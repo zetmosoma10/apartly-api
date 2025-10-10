@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 const apartmentSchema = new Schema(
   {
@@ -17,6 +17,11 @@ const apartmentSchema = new Schema(
     price: {
       type: Number,
       required: true,
+    },
+    landlord: {
+      type: Types.ObjectId,
+      ref: 'User',
+      required: true
     },
     bedrooms: {
       type: Number,
