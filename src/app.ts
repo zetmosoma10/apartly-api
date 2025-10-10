@@ -8,6 +8,7 @@ import morgan from "morgan";
 import apartmentRoutes from "./routes/apartmentRoutes";
 import globalErrorHandler from "./middleware/globalErrorHandler";
 import authRouter from "./routes/authRoutes";
+import userRouter from "./routes/authRoutes";
 
 const app = express();
 
@@ -29,6 +30,7 @@ if (env.NODE_ENV === "development") {
 
 app.use("/api/apartments", apartmentRoutes);
 app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
 app.use((req, res) => {
   res.status(400).send({
     success: false,

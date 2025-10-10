@@ -75,6 +75,7 @@ userSchema.methods.generateJwt = function (): string {
       _id: this._id,
       firstName: this.firstName,
       lastName: this.lastName,
+      role: this.role
     },
     env.APARTLY_JWT_SECRET!,
     {
