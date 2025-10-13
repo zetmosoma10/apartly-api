@@ -18,10 +18,4 @@ export const userSchema = z.object({
   role: z.enum(["tenant", "landlord", "admin"]).default("tenant"),
 });
 
-export const loginSchema = z.object({
-  email: z.string().email().max(255, "email too long"),
-  password: z
-    .string({ invalid_type_error: "password must be a string" })
-    .min(4, "password too short")
-    .max(255, "password too long"),
-});
+export const loginSchema = userSchema.pick({ email: true, password: true });

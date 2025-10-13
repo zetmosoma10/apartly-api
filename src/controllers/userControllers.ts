@@ -3,6 +3,8 @@ import User from "../models/User";
 import AppError from "../utils/AppError";
 import getUserFields from "../utils/getUserFields";
 import _ from "lodash";
+import mongoose from "mongoose";
+import Apartment from "../models/Apartment";
 
 export const getLoginUser: RequestHandler = async (req, res, next) => {
   try {

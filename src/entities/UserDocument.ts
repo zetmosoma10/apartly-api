@@ -12,8 +12,8 @@ export type UserDocument = {
     url: string;
     public_url: string;
   };
-  generateJwt?: () => string;
-  isPasswordsTheSame?: (
+  generateJwt: () => string;
+  isPasswordsTheSame: (
     password: string,
     hashedPassword: string
   ) => Promise<boolean>;
