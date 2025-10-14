@@ -6,6 +6,7 @@ import {
   updateApartment,
   deleteApartment,
   getAllUserApartments,
+  getFeatureApartments,
 } from "../controllers/apartmentControllers";
 import uploadApartmentImages from "../configs/multer";
 import {
@@ -22,6 +23,7 @@ router
   .get(getAllApartments);
 
 router.route("/me").get(protectRoute, authorizeRoute, getAllUserApartments);
+router.route("/features").get(getFeatureApartments);
 
 router
   .route("/:id")

@@ -50,13 +50,14 @@ export const createApartment: RequestHandler = async (req, res, next) => {
       results: apartment,
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
 export const getAllApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find();
+    const apartments = await Apartment.find().sort("createdAt");
 
     res.status(200).send({
       success: true,
@@ -70,7 +71,9 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
 
 export const getAllUserApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find({ landlord: req.user?._id });
+    const apartments = await Apartment.find({ landlord: req.user?._id }).sort(
+      "createdAt"
+    );
 
     res.status(200).send({
       success: true,
@@ -97,6 +100,20 @@ export const getApartment: RequestHandler<{ id: string }> = async (
     res.status(200).send({
       success: true,
       results: apartment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFeatureApartments: RequestHandler = async (req, res, next) => {
+  try {
+    const apartments = await Apartment.find().sort("createdAt").limit(3);
+
+    res.status(200).send({
+      success: true,
+      count: apartments.length,
+      results: apartments,
     });
   } catch (error) {
     next(error);
