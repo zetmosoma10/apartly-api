@@ -1,12 +1,13 @@
 import { RequestHandler } from "express";
-import Apartment from "../models/Apartment";
-import cloudinary from "../configs/cloudinary";
-import streamifier from "streamifier";
-import AppError from "../utils/AppError";
 import {
   apartmentSchema,
   updateApartmentSchema,
 } from "../validations/apartmentSchemas";
+import Apartment from "../models/Apartment";
+import cloudinary from "../configs/cloudinary";
+import streamifier from "streamifier";
+import AppError from "../utils/AppError";
+import ApiFeatures from "../utils/ApiFeatures";
 
 const streamUpload = (fileBuffer: Buffer, folder: string) => {
   return new Promise((resolve, reject) => {
@@ -57,12 +58,35 @@ export const createApartment: RequestHandler = async (req, res, next) => {
 
 export const getAllApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find().sort("createdAt");
+    const features = new ApiFeatures(Apartment.find(), req.query)
+      .filter()
+      .search()
+      .sort()
+      .pagination();
+
+    const apartments = await features.mongooseQuery;
+
+    // * Count total documents after applying filters & search (but before pagination)
+    const totalDocuments = await Apartment.countDocuments(
+      features.filtersApplied
+    );
+
+    // * PAGINATION INFO
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 3;
+    const totalPages = Math.ceil(totalDocuments / limit);
 
     res.status(200).send({
       success: true,
-      count: apartments.length,
       results: apartments,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        currentCountPerPage: apartments.length,
+        totalPerPage: limit,
+        totalDocuments,
+        hasNextPage: page < totalPages,
+      },
     });
   } catch (error) {
     next(error);
@@ -71,14 +95,37 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
 
 export const getAllUserApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find({ landlord: req.user?._id }).sort(
-      "createdAt"
+    const features = new ApiFeatures(
+      Apartment.find({ landlord: req.user?._id }),
+      req.query
+    )
+      .filter()
+      .sort()
+      .pagination();
+
+    const apartments = await features.mongooseQuery;
+
+    // * Count total documents after applying filters & search (but before pagination)
+    const totalDocuments = await Apartment.countDocuments(
+      features.filtersApplied
     );
+
+    // * PAGINATION INFO
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 3;
+    const totalPages = Math.ceil(totalDocuments / limit);
 
     res.status(200).send({
       success: true,
-      count: apartments.length,
       results: apartments,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        currentCountPerPage: apartments.length,
+        totalPerPage: limit,
+        totalDocuments,
+        hasNextPage: page < totalPages,
+      },
     });
   } catch (error) {
     next(error);
@@ -108,7 +155,7 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 
 export const getFeatureApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find().sort("createdAt").limit(3);
+    const apartments = await Apartment.find().sort("-createdAt").limit(3);
 
     res.status(200).send({
       success: true,

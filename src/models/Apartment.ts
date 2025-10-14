@@ -20,8 +20,9 @@ const apartmentSchema = new Schema(
     },
     landlord: {
       type: Types.ObjectId,
-      ref: 'User',
-      required: true
+      ref: "User",
+      required: true,
+      index: true
     },
     bedrooms: {
       type: Number,
@@ -60,13 +61,23 @@ const apartmentSchema = new Schema(
     type: {
       type: String,
       enum: [
-        "1-bedroom", "2-bedrooms", "3-bedrooms", "studio", "bachelor", "other"
+        "1-bedroom",
+        "2-bedrooms",
+        "3-bedrooms",
+        "studio",
+        "bachelor",
+        "other",
       ],
       required: true,
     },
   },
   { timestamps: true }
 );
+
+apartmentSchema.index({ status: 1 });
+apartmentSchema.index({ type: 1 });
+apartmentSchema.index({ createdAt: -1 });
+apartmentSchema.index({ city: "text", title: "text", description: "text" });
 
 const Apartment = model("Apartment", apartmentSchema);
 
