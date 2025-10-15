@@ -73,7 +73,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
 
     // * PAGINATION INFO
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 3;
+    const limit = Number(req.query.limit) || 10;
     const totalPages = Math.ceil(totalDocuments / limit);
 
     res.status(200).send({
@@ -112,7 +112,7 @@ export const getAllUserApartments: RequestHandler = async (req, res, next) => {
 
     // * PAGINATION INFO
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 3;
+    const limit = Number(req.query.limit) || 10;
     const totalPages = Math.ceil(totalDocuments / limit);
 
     res.status(200).send({

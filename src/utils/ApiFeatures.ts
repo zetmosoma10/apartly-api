@@ -93,7 +93,7 @@ class ApiFeatures<T extends Document> {
   // * PAGINATION
   pagination() {
     const page = Number(this.queryString.page) || 1;
-    const limit = Number(this.queryString.limit) || 3;
+    const limit = Number(this.queryString.limit) || 10;
     const skip = (page - 1) * limit;
 
     this.mongooseQuery = this.mongooseQuery.find().skip(skip).limit(limit);
