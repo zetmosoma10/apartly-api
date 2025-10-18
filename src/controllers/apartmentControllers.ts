@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import {
   apartmentSchema,
+  rateApartmentSchema,
   updateApartmentSchema,
 } from "../validations/apartmentSchemas";
 import Apartment from "../models/Apartment";
@@ -228,6 +229,67 @@ export const deleteApartment: RequestHandler<{ id: string }> = async (
     await apartment.deleteOne();
 
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rateApartment: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id);
+    if (!apartment) {
+      next(new AppError("Apartment not found", 404));
+      return;
+    }
+
+    // * Check if landlord is not rating their own apartment
+    if (req.user?._id === apartment.landlord) {
+      next(new AppError("Cannot rate your own apartment", 400));
+      return;
+    }
+
+    const results = rateApartmentSchema.safeParse(req.body);
+    if (!results.success) {
+      next(new AppError("invalid input(s)", 400, results.error.formErrors));
+      return;
+    }
+
+    // * Check if user already rated
+    const existingRating = apartment.ratings.find(
+      (r) => r.tenant.toString() === req.user?._id.toString()
+    );
+
+    if (existingRating) {
+      // * Update rating
+      existingRating.rating = results.data.rating;
+      existingRating.comment = results.data.comment;
+    } else {
+      // * Create new rating
+      apartment.ratings.push({ tenant: req.user?._id, ...results.data });
+    }
+
+    // * Calculate average & total ratings
+    const totalRatings = apartment.ratings.length;
+    const averageRating =
+      apartment.ratings.reduce((acc, r) => acc + r.rating, 0) / totalRatings;
+
+    // * Update document with new ratings
+    apartment.totalRatings = totalRatings;
+    apartment.averageRatings = Number(averageRating.toFixed(1));
+
+    await apartment.save();
+
+    res.status(200).send({
+      success: true,
+      message: existingRating
+        ? "Rating updated successfully"
+        : "Rating added successfully",
+      results: apartment,
+    });
   } catch (error) {
     next(error);
   }

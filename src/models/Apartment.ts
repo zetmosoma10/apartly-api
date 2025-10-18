@@ -1,5 +1,26 @@
 import { model, Schema, Types } from "mongoose";
 
+const ratingSchema = new Schema(
+  {
+    tenant: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      required: true,
+    },
+    comment: {
+      type: String,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
+
 const apartmentSchema = new Schema(
   {
     title: {
@@ -22,7 +43,7 @@ const apartmentSchema = new Schema(
       type: Types.ObjectId,
       ref: "User",
       required: true,
-      index: true
+      index: true,
     },
     bedrooms: {
       type: Number,
@@ -39,6 +60,15 @@ const apartmentSchema = new Schema(
     address: {
       type: String,
       required: true,
+    },
+    ratings: [ratingSchema],
+    totalRatings: {
+      type: Number,
+      default: 0,
+    },
+    averageRatings: {
+      type: Number,
+      default: 0,
     },
     amenities: [String],
     images: [

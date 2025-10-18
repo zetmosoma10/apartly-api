@@ -73,7 +73,12 @@ export const updateApartmentSchema = z.object({
     .optional(),
   type: z
     .enum([
-      "1-bedroom", "2-bedrooms", "3-bedrooms", "studio", "bachelor", "other"
+      "1-bedroom",
+      "2-bedrooms",
+      "3-bedrooms",
+      "studio",
+      "bachelor",
+      "other",
     ])
     .optional(),
   amenities: z
@@ -81,5 +86,18 @@ export const updateApartmentSchema = z.object({
       z.string().transform((val) => val.split(",").map((a) => a.trim())), // if sent as "wifi,parking"
       z.array(z.string()), // if already sent as ["wifi","parking"]
     ])
+    .optional(),
+});
+
+export const rateApartmentSchema = z.object({
+  rating: z
+    .number({ invalid_type_error: "rating must be a number" })
+    .int()
+    .min(1, "rating should be between 1 and 5 (inclusive)")
+    .max(5, "rating should be between 1 and 5 (inclusive)"),
+  comment: z
+    .string()
+    .min(1, "comment required")
+    .max(255, "comment too long")
     .optional(),
 });
