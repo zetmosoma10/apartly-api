@@ -79,7 +79,7 @@ userSchema.methods.generateJwt = function (): string {
     },
     env.APARTLY_JWT_SECRET!,
     {
-      expiresIn: "1d",
+      expiresIn: "2d",
     }
   );
 };

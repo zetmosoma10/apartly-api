@@ -106,9 +106,10 @@ export const getAllUserApartments: RequestHandler = async (req, res, next) => {
     const apartments = await features.mongooseQuery;
 
     // * Count total documents after applying filters & search (but before pagination)
-    const totalDocuments = await Apartment.countDocuments(
-      features.filtersApplied
-    );
+    const totalDocuments = await Apartment.countDocuments({
+      landlord: req.user?._id,
+      ...features.filtersApplied,
+    });
 
     // * PAGINATION INFO
     const page = Number(req.query.page) || 1;
@@ -155,7 +156,7 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 
 export const getFeatureApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find().sort("-createdAt").limit(3);
+    const apartments = await Apartment.find().sort("-createdAt").limit(4);
 
     res.status(200).send({
       success: true,
@@ -184,11 +185,12 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       return;
     }
 
-    const apartment = await Apartment.findByIdAndUpdate(
-      req.params.id,
+    const apartment = await Apartment.findOneAndUpdate(
+      { _id: req.params.id, landlord: req.user?._id },
       results.data,
       { new: true, runValidators: true }
     );
+
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
       return;
@@ -209,7 +211,10 @@ export const deleteApartment: RequestHandler<{ id: string }> = async (
   next
 ) => {
   try {
-    const apartment = await Apartment.findById(req.params.id);
+    const apartment = await Apartment.findOne({
+      _id: req.params.id,
+      landlord: req.user?._id,
+    });
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
       return;
