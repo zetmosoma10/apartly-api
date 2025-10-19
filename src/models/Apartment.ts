@@ -61,6 +61,10 @@ const apartmentSchema = new Schema(
       type: String,
       required: true,
     },
+    coordinates: {
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
+    },
     ratings: [ratingSchema],
     totalRatings: {
       type: Number,
@@ -104,6 +108,7 @@ const apartmentSchema = new Schema(
   { timestamps: true }
 );
 
+apartmentSchema.index({ location: "2dsphere" });
 apartmentSchema.index({ status: 1 });
 apartmentSchema.index({ type: 1 });
 apartmentSchema.index({ createdAt: -1 });

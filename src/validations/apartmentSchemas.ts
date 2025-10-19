@@ -19,6 +19,10 @@ export const apartmentSchema = z.object({
     .min(0, "bathrooms must be a whole number"),
   city: z.string().min(1, "city required").max(255, "city too long"),
   address: z.string().min(1, "address required").max(255, "address too long"),
+  coordinates: z.object({
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+  }),
   status: z.enum(["available", "rented", "maintenance"]).default("available"),
   type: z.enum([
     "studio",
@@ -66,6 +70,12 @@ export const updateApartmentSchema = z.object({
     .string()
     .min(1, "address required")
     .max(255, "address too long")
+    .optional(),
+  coordinates: z
+    .object({
+      lat:z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    })
     .optional(),
   status: z
     .enum(["available", "rented", "maintenance"])

@@ -25,7 +25,10 @@ const streamUpload = (fileBuffer: Buffer, folder: string) => {
 
 export const createApartment: RequestHandler = async (req, res, next) => {
   try {
-    const results = apartmentSchema.safeParse(req.body);
+    const coordinates =
+      req.body.coordinates && JSON.parse(req.body.coordinates);
+
+    const results = apartmentSchema.safeParse({ ...req.body, coordinates });
     if (!results.success) {
       next(new AppError("Invalid input(s)", 400, results.error.formErrors));
       return;
@@ -180,7 +183,13 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       return;
     }
 
-    const results = updateApartmentSchema.safeParse(req.body);
+    const coordinates =
+      req.body.coordinates && JSON.parse(req.body.coordinates);
+
+    const results = updateApartmentSchema.safeParse({
+      ...req.body,
+      coordinates,
+    });
     if (!results.success) {
       next(new AppError("Invalid input(s)", 400, results.error.formErrors));
       return;
