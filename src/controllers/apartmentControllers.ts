@@ -178,13 +178,13 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
   next
 ) => {
   try {
-    if (req.body.images) {
+    if (req.body?.images) {
       next(new AppError("Cannot update images with this route", 400));
       return;
     }
 
     const coordinates =
-      req.body.coordinates && JSON.parse(req.body.coordinates);
+      req.body?.coordinates && JSON.parse(req.body.coordinates);
 
     const results = updateApartmentSchema.safeParse({
       ...req.body,
@@ -194,6 +194,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       next(new AppError("Invalid input(s)", 400, results.error.formErrors));
       return;
     }
+    console.log(results.data);
 
     const apartment = await Apartment.findOneAndUpdate(
       { _id: req.params.id, landlord: req.user?._id },
@@ -211,6 +212,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       results: apartment,
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };

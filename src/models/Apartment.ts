@@ -108,7 +108,6 @@ const apartmentSchema = new Schema(
   { timestamps: true }
 );
 
-apartmentSchema.index({ location: "2dsphere" });
 apartmentSchema.index({ status: 1 });
 apartmentSchema.index({ type: 1 });
 apartmentSchema.index({ createdAt: -1 });

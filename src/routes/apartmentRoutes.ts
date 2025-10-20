@@ -25,12 +25,18 @@ router
 
 router.route("/me").get(protectRoute, authorizeRoute, getAllUserApartments);
 router.route("/features").get(getFeatureApartments);
-router.route("/:id/rate").patch(protectRoute,rateApartment);
+router.route("/:id/rate").patch(protectRoute, rateApartment);
 
 router
   .route("/:id")
   .get(validateObjectId, getApartment)
-  .patch(protectRoute, authorizeRoute, validateObjectId, updateApartment)
+  .patch(
+    protectRoute,
+    authorizeRoute,
+    validateObjectId,
+    uploadApartmentImages,
+    updateApartment
+  )
   .delete(protectRoute, authorizeRoute, validateObjectId, deleteApartment);
 
 export default router;
