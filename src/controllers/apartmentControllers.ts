@@ -194,7 +194,6 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       next(new AppError("Invalid input(s)", 400, results.error.formErrors));
       return;
     }
-    console.log(results.data);
 
     const apartment = await Apartment.findOneAndUpdate(
       { _id: req.params.id, landlord: req.user?._id },
