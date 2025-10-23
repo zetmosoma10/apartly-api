@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { loginSchema, userSchema } from "../validations/userSchemas";
 import AppError from "../utils/AppError";
 import User from "../models/User";
+import getUserFields from "../utils/getUserFields";
 
 export const register: RequestHandler = async (req, res, next) => {
   try {
@@ -23,9 +24,12 @@ export const register: RequestHandler = async (req, res, next) => {
 
     const token = user.generateJwt();
 
+    const editedUser = _.pick(user, getUserFields());
+
     res.status(201).send({
       success: true,
       token,
+      results: editedUser,
     });
   } catch (error) {
     next(error);
@@ -62,9 +66,12 @@ export const login: RequestHandler = async (req, res, next) => {
 
     const token = user.generateJwt();
 
+    const editedUser = _.pick(user, getUserFields());
+
     res.status(200).send({
       success: true,
       token,
+      results: editedUser,
     });
   } catch (error) {
     next(error);
