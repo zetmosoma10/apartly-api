@@ -10,6 +10,7 @@ import getUserFields from "../utils/getUserFields";
 import _ from "lodash";
 import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
+import streamUpload from "../utils/streamUpload";
 
 export const getLoginUser: RequestHandler = async (req, res, next) => {
   try {
@@ -71,7 +72,7 @@ export const deleteAccount: RequestHandler = async (req, res, next) => {
     session.startTransaction();
 
     // * Validate incoming password
-    const { success, data, error} = deleteProfileSchema.safeParse(req.body);
+    const { success, data, error } = deleteProfileSchema.safeParse(req.body);
     if (!success) {
       next(new AppError("Invalid input(s)", 400, error.formErrors));
       return;
@@ -87,7 +88,10 @@ export const deleteAccount: RequestHandler = async (req, res, next) => {
     }
 
     // * Check if incoming password is same as one in DB
-    const passwordValid = await user.isPasswordsTheSame(data.password,user.password);
+    const passwordValid = await user.isPasswordsTheSame(
+      data.password,
+      user.password
+    );
     if (!passwordValid) {
       next(new AppError("Incorrect password", 400));
       return;
@@ -102,7 +106,7 @@ export const deleteAccount: RequestHandler = async (req, res, next) => {
       const imagesEntries = apartments.map((a) => a.images);
       const images = imagesEntries.flat();
 
-      // * Delete apartment images from cloudinary 
+      // * Delete apartment images from cloudinary
       await Promise.allSettled(
         images.map((img) => cloudinary.uploader.destroy(img.public_id))
       );
@@ -118,7 +122,7 @@ export const deleteAccount: RequestHandler = async (req, res, next) => {
 
     // * Delete User from DB
     await user?.deleteOne({ session });
-    
+
     await session.commitTransaction();
 
     res.status(200).send({
@@ -131,5 +135,46 @@ export const deleteAccount: RequestHandler = async (req, res, next) => {
     console.log(error);
   } finally {
     await session.endSession();
+  }
+};
+
+export const uploadAvatar: RequestHandler = async (req, res, next) => {
+  try {
+    // * Check if file exist
+    if (!req.file) {
+      next(new AppError("Please upload image", 400));
+      return;
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      next(new AppError("User not found", 404));
+      return;
+    }
+
+    // * Delete old avatar if exisit
+    if (user.avatar.public_id) {
+      await cloudinary.uploader.destroy(user.avatar.public_id);
+    }
+
+    const avatar = req.file as Express.Multer.File;
+
+    // * Upload new avatar to cloudinary
+    const results: any = await streamUpload(avatar.buffer, "Apartly/Avatars");
+
+    // Save to user document
+    user.avatar = {
+      url: results.secure_url,
+      public_id: results.public_id,
+    };
+    await user.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Avatar uploaded successfully",
+      results: user,
+    });
+  } catch (error) {
+    next(error);
   }
 };

@@ -6,22 +6,9 @@ import {
 } from "../validations/apartmentSchemas";
 import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
-import streamifier from "streamifier";
 import AppError from "../utils/AppError";
 import ApiFeatures from "../utils/ApiFeatures";
-
-const streamUpload = (fileBuffer: Buffer, folder: string) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder },
-      (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      }
-    );
-    streamifier.createReadStream(fileBuffer).pipe(stream);
-  });
-};
+import streamUpload from "../utils/streamUpload";
 
 export const createApartment: RequestHandler = async (req, res, next) => {
   try {
@@ -34,7 +21,7 @@ export const createApartment: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    // upload images
+    // * upload images
     const uploadedImages = [];
     for (const file of req.files as Express.Multer.File[]) {
       const result: any = await streamUpload(file.buffer, "Apartly/Apartments");

@@ -9,7 +9,7 @@ import {
   getAllUserApartments,
   getFeatureApartments,
 } from "../controllers/apartmentControllers";
-import uploadApartmentImages from "../configs/multer";
+import { uploadApartmentImages } from "../configs/multer";
 import {
   protectRoute,
   authorizeRoute,
