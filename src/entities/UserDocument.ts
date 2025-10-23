@@ -10,7 +10,7 @@ export type UserDocument = {
   role: "tenant" | "landlord" | "admin";
   avatar: {
     url: string;
-    public_url: string;
+    public_id: string;
   };
   generateJwt: () => string;
   isPasswordsTheSame: (
