@@ -4,6 +4,7 @@ import {
   updateMe,
   deleteAccount,
   uploadAvatar,
+  deleteAvatar,
 } from "../controllers/userControllers";
 import { protectRoute } from "../middleware/protectRouteHandlers";
 import { uploadAvatarImage } from "../configs/multer";
@@ -18,6 +19,7 @@ userRouter
 
 userRouter
   .route("/me/avatar")
-  .patch(protectRoute, uploadAvatarImage, uploadAvatar);
+  .patch(protectRoute, uploadAvatarImage, uploadAvatar)
+  .delete(protectRoute, deleteAvatar)
 
 export default userRouter;

@@ -3,6 +3,7 @@ import { loginSchema, userSchema } from "../validations/userSchemas";
 import AppError from "../utils/AppError";
 import User from "../models/User";
 import getUserFields from "../utils/getUserFields";
+import _ from "lodash"
 
 export const register: RequestHandler = async (req, res, next) => {
   try {

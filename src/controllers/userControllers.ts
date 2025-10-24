@@ -178,3 +178,29 @@ export const uploadAvatar: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteAvatar: RequestHandler = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      next(new AppError("User not found", 404));
+      return;
+    }
+
+    await cloudinary.uploader.destroy(user.avatar.public_id);
+
+    user.avatar.url = "";
+    user.avatar.public_id = "";
+    await user.save();
+
+    const editedUser = _.pick(user, getUserFields());
+
+    res.status(200).send({
+      success: true,
+      message: "Avatar deleted successfully",
+      results: editedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
