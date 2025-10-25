@@ -73,7 +73,7 @@ export const updateApartmentSchema = z.object({
     .optional(),
   coordinates: z
     .object({
-      lat:z.number().min(-90).max(90),
+      lat: z.number().min(-90).max(90),
       lng: z.number().min(-180).max(180),
     })
     .optional(),
@@ -99,15 +99,14 @@ export const updateApartmentSchema = z.object({
     .optional(),
 });
 
-export const rateApartmentSchema = z.object({
+export const ratingSchema = z.object({
   rating: z
     .number({ invalid_type_error: "rating must be a number" })
     .int()
     .min(1, "rating should be between 1 and 5 (inclusive)")
     .max(5, "rating should be between 1 and 5 (inclusive)"),
-  comment: z
-    .string()
-    .min(1, "comment required")
-    .max(255, "comment too long")
-    .optional(),
+});
+
+export const commentSchema = z.object({
+  comment: z.string().min(1, "comment required").max(255, "comment too long"),
 });

@@ -1,4 +1,5 @@
 import { model, Schema, Types } from "mongoose";
+import { ApartmentDocument } from "../entities/ApartmentDocument";
 
 const ratingSchema = new Schema(
   {
@@ -11,7 +12,6 @@ const ratingSchema = new Schema(
       type: Number,
       min: 1,
       max: 5,
-      required: true,
     },
     comment: {
       type: String,
@@ -113,6 +113,6 @@ apartmentSchema.index({ type: 1 });
 apartmentSchema.index({ createdAt: -1 });
 apartmentSchema.index({ city: "text", title: "text", description: "text" });
 
-const Apartment = model("Apartment", apartmentSchema);
+const Apartment = model<ApartmentDocument>("Apartment", apartmentSchema);
 
 export default Apartment;

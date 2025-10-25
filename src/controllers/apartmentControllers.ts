@@ -1,7 +1,9 @@
 import { RequestHandler } from "express";
+import { Types } from "mongoose";
 import {
   apartmentSchema,
-  rateApartmentSchema,
+  commentSchema,
+  ratingSchema,
   updateApartmentSchema,
 } from "../validations/apartmentSchemas";
 import Apartment from "../models/Apartment";
@@ -130,7 +132,10 @@ export const getApartment: RequestHandler<{ id: string }> = async (
   next
 ) => {
   try {
-    const apartment = await Apartment.findById(req.params.id);
+    const apartment = await Apartment.findById(req.params.id)
+      .populate("landlord")
+      .populate("ratings.tenant");
+
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
       return;
@@ -231,63 +236,106 @@ export const deleteApartment: RequestHandler<{ id: string }> = async (
   }
 };
 
-export const rateApartment: RequestHandler<{ id: string }> = async (
+export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
   req,
   res,
   next
 ) => {
   try {
-    const apartment = await Apartment.findById(req.params.id);
-    if (!apartment) {
-      next(new AppError("Apartment not found", 404));
-      return;
+    const parsed = ratingSchema.safeParse(req.body);
+    if (!parsed.success)
+      return next(new AppError("Invalid input", 400, parsed.error.formErrors));
+
+    const { rating } = parsed.data;
+    const apartment = await Apartment.findById(req.params.id).populate(
+      "ratings.tenant",
+      "firstName lastName createdAt avatar"
+    );
+    if (!apartment) return next(new AppError("Apartment not found", 404));
+
+    //* prevent landlord rating their own apartment
+    if (apartment.landlord?.toString() === req.user?._id?.toString()) {
+      return next(new AppError("Cannot rate your own apartment", 400));
     }
 
-    // * Check if landlord is not rating their own apartment
-    if (req.user?._id === apartment.landlord) {
-      next(new AppError("Cannot rate your own apartment", 400));
-      return;
-    }
-
-    const results = rateApartmentSchema.safeParse(req.body);
-    if (!results.success) {
-      next(new AppError("invalid input(s)", 400, results.error.formErrors));
-      return;
-    }
-
-    // * Check if user already rated
-    const existingRating = apartment.ratings.find(
-      (r) => r.tenant.toString() === req.user?._id.toString()
+    const existing = apartment.ratings.find(
+      (r) => r.tenant?._id.toString() === req.user?._id?.toString()
     );
 
-    if (existingRating) {
-      // * Update rating
-      existingRating.rating = results.data.rating;
-      existingRating.comment = results.data.comment;
+    if (existing) {
+      //* update only rating
+      existing.rating = rating;
     } else {
-      // * Create new rating
-      apartment.ratings.push({ tenant: req.user?._id, ...results.data });
+      apartment.ratings.push({
+        tenant: req.user?._id as Types.ObjectId,
+        rating,
+      });
     }
 
-    // * Calculate average & total ratings
-    const totalRatings = apartment.ratings.length;
-    const averageRating =
-      apartment.ratings.reduce((acc, r) => acc + r.rating, 0) / totalRatings;
-
-    // * Update document with new ratings
-    apartment.totalRatings = totalRatings;
-    apartment.averageRatings = Number(averageRating.toFixed(1));
+    //* re-calculate average using only entries that have numeric rating
+    const rated = apartment.ratings.filter((r) => typeof r.rating === "number");
+    apartment.totalRatings = rated.length;
+    apartment.averageRatings = rated.length
+      ? Number(
+          (
+            rated.reduce((acc, r) => acc + (r.rating as number), 0) /
+            rated.length
+          ).toFixed(1)
+        )
+      : 0;
 
     await apartment.save();
 
-    res.status(200).send({
-      success: true,
-      message: existingRating
-        ? "Rating updated successfully"
-        : "Rating added successfully",
-      results: apartment,
-    });
-  } catch (error) {
-    next(error);
+    res
+      .status(200)
+      .send({ success: true, message: "Rating saved", results: apartment });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const addOrUpdateComment: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const parsed = commentSchema.safeParse(req.body);
+    if (!parsed.success)
+      return next(new AppError("Invalid input", 400, parsed.error.formErrors));
+
+    const { comment } = parsed.data;
+    const apartment = await Apartment.findById(req.params.id).populate(
+      "ratings.tenant",
+      "firstName lastName createdAt avatar"
+    );
+    if (!apartment) return next(new AppError("Apartment not found", 404));
+
+    // * prevent landlord commenting on their own apartment? (optional)
+    if (apartment.landlord?.toString() === req.user?._id?.toString()) {
+      return next(new AppError("Cannot comment on your own apartment", 400));
+    }
+
+    const existing = apartment.ratings.find(
+      (r) => r.tenant?._id.toString() === req.user?._id?.toString()
+    );
+
+    if (existing) {
+      // update only comment
+      existing.comment = comment.trim();
+    } else {
+      apartment.ratings.push({
+        tenant: req.user?._id as Types.ObjectId,
+        comment: comment.trim(),
+      });
+    }
+
+    await apartment.save();
+
+    res
+      .status(200)
+      .send({ success: true, message: "Comment saved", results: apartment });
+  } catch (err) {
+    next(err);
   }
 };
