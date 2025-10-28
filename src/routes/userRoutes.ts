@@ -6,13 +6,18 @@ import {
   uploadAvatar,
   deleteAvatar,
   getAllUsers,
+  deleteUserAccount,
 } from "../controllers/userControllers";
 import { protectRoute, adminRoute } from "../middleware/protectRouteHandlers";
 import { uploadAvatarImage } from "../configs/multer";
+import validateObjectId from "../middleware/validateObjectId";
 
 const userRouter = Router();
 
 userRouter.route("/").get(protectRoute, adminRoute, getAllUsers);
+userRouter
+  .route("/:id")
+  .delete(protectRoute, adminRoute, validateObjectId, deleteUserAccount);
 
 userRouter
   .route("/me")

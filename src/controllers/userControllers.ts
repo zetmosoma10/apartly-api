@@ -1,9 +1,9 @@
+import { startSession } from "mongoose";
 import { RequestHandler } from "express";
 import {
   deleteProfileSchema,
   updateMeSchema,
 } from "../validations/userSchemas";
-import mongoose from "mongoose";
 import User from "../models/User";
 import AppError from "../utils/AppError";
 import getUserFields from "../utils/getUserFields";
@@ -67,7 +67,7 @@ export const updateMe: RequestHandler = async (req, res, next) => {
 };
 
 export const deleteAccount: RequestHandler = async (req, res, next) => {
-  const session = await mongoose.startSession();
+  const session = await startSession();
 
   try {
     session.startTransaction();
@@ -232,11 +232,68 @@ export const getAllUsers: RequestHandler = async (req, res, next) => {
         totalPages,
         currentCountPerPage: users.length,
         totalPerPage: limit,
-        totalDocuments,
+        totalDocuments: totalDocuments ? totalDocuments - 1 : totalDocuments, // * If docCount is greater than 0, Dont include the admin user making the request
         hasNextPage: page < totalPages,
       },
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const deleteUserAccount: RequestHandler<{ id: string }> = async (
+  req,
+  res,
+  next
+) => {
+  const session = await startSession();
+
+  try {
+    session.startTransaction();
+
+    const user = await User.findById(req.params.id).session(session);
+    if (!user) {
+      next(new AppError("User not found", 404));
+      return;
+    }
+
+    // * If user is landlord, delete apartments and their images in cloudinary
+    if (user.role === "landlord") {
+      const apartments = await Apartment.find({ landlord: user._id }).session(
+        session
+      );
+
+      const imagesEntries = apartments.map((a) => a.images);
+      const images = imagesEntries.flat();
+
+      await Promise.allSettled(
+        images.map((img) => cloudinary.uploader.destroy(img.public_id))
+      );
+
+      await Apartment.deleteMany({ landlord: user._id }, { session });
+    }
+
+    // * If User has avatar, delete it in cloudinary
+    if (user.avatar.public_id) {
+      await cloudinary.uploader.destroy(user.avatar.public_id);
+    }
+
+    // * delete user from database
+    await user.deleteOne({ session });
+
+    // * commit all operations
+    session.commitTransaction();
+
+    res.status(200).send({
+      success: true,
+      message: "User Account deleted successfully",
+    });
+  } catch (error) {
+    // * abort all operations
+    session.abortTransaction();
+    next(error);
+  } finally {
+    // * close the session
+    session.endSession();
   }
 };
