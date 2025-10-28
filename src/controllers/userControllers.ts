@@ -217,7 +217,10 @@ export const getAllUsers: RequestHandler = async (req, res, next) => {
     const users = await features.mongooseQuery;
 
     // * Count total documents after applying filters & search (but before pagination)
-    const totalDocuments = await User.countDocuments(features.filtersApplied);
+    const totalDocuments = await User.countDocuments({
+      _id: { $ne: req.user?._id },
+      ...features.filtersApplied,
+    });
 
     // * PAGINATION INFO
     const page = Number(req.query.page) || 1;

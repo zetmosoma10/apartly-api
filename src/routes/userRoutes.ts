@@ -14,9 +14,9 @@ import validateObjectId from "../middleware/validateObjectId";
 
 const userRouter = Router();
 
-userRouter.route("/").get(protectRoute, adminRoute, getAllUsers);
+userRouter.route("/admin").get(protectRoute, adminRoute, getAllUsers);
 userRouter
-  .route("/:id")
+  .route("/:id/admin")
   .delete(protectRoute, adminRoute, validateObjectId, deleteUserAccount);
 
 userRouter

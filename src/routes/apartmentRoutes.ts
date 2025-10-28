@@ -9,11 +9,13 @@ import {
   getFeatureApartments,
   addOrUpdateComment,
   addOrUpdateRating,
+  getAllUserRelatedApartments,
 } from "../controllers/apartmentControllers";
 import { uploadApartmentImages } from "../configs/multer";
 import {
   protectRoute,
   authorizeRoute,
+  adminRoute,
 } from "../middleware/protectRouteHandlers";
 import validateObjectId from "../middleware/validateObjectId";
 
@@ -26,9 +28,11 @@ router
 
 router.route("/me").get(protectRoute, authorizeRoute, getAllUserApartments);
 router.route("/features").get(getFeatureApartments);
+
 router
   .route("/:id/rating")
   .patch(protectRoute, validateObjectId, addOrUpdateRating);
+
 router
   .route("/:id/comment")
   .patch(protectRoute, validateObjectId, addOrUpdateComment);
@@ -44,5 +48,10 @@ router
     updateApartment
   )
   .delete(protectRoute, authorizeRoute, validateObjectId, deleteApartment);
+
+// ? ADMIN
+router
+  .route("/:id/admin")
+  .get(protectRoute, adminRoute, validateObjectId, getAllUserRelatedApartments);
 
 export default router;

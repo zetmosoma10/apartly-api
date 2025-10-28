@@ -11,6 +11,7 @@ import cloudinary from "../configs/cloudinary";
 import AppError from "../utils/AppError";
 import ApiFeatures from "../utils/ApiFeatures";
 import streamUpload from "../utils/streamUpload";
+import User from "../models/User";
 
 export const createApartment: RequestHandler = async (req, res, next) => {
   try {
@@ -337,5 +338,56 @@ export const addOrUpdateComment: RequestHandler<{ id: string }> = async (
       .send({ success: true, message: "Comment saved", results: apartment });
   } catch (err) {
     next(err);
+  }
+};
+
+// ? ADMIN
+export const getAllUserRelatedApartments: RequestHandler<{
+  id: string;
+}> = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (user?.role === "tenant") {
+      res.status(404).send({
+        success: false,
+        message: "User is a Tenant, they do not have apartments",
+      });
+
+      return;
+    }
+
+    const features = new ApiFeatures(
+      Apartment.find({ landlord: user?._id }),
+      req.query
+    ).pagination();
+
+    const apartments = await features.mongooseQuery;
+
+    // * Count total documents after applying filters & search (but before pagination)
+    const totalDocuments = await Apartment.countDocuments({
+      landlord: user?._id,
+      ...features.filtersApplied,
+    });
+
+    // * PAGINATION INFO
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const totalPages = Math.ceil(totalDocuments / limit);
+
+    res.status(200).send({
+      success: true,
+      results: apartments,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        currentCountPerPage: apartments.length,
+        totalPerPage: limit,
+        totalDocuments,
+        hasNextPage: page < totalPages,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };
