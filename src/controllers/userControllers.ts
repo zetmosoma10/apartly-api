@@ -11,6 +11,7 @@ import _ from "lodash";
 import Apartment from "../models/Apartment";
 import cloudinary from "../configs/cloudinary";
 import streamUpload from "../utils/streamUpload";
+import ApiFeatures from "../utils/ApiFeatures";
 
 export const getLoginUser: RequestHandler = async (req, res, next) => {
   try {
@@ -199,6 +200,41 @@ export const deleteAvatar: RequestHandler = async (req, res, next) => {
       success: true,
       message: "Avatar deleted successfully",
       results: editedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ? ADMIN
+export const getAllUsers: RequestHandler = async (req, res, next) => {
+  try {
+    const features = new ApiFeatures(
+      User.find({ _id: { $ne: req.user?._id } }),
+      req.query
+    ).pagination();
+
+    const users = await features.mongooseQuery;
+
+    // * Count total documents after applying filters & search (but before pagination)
+    const totalDocuments = await User.countDocuments(features.filtersApplied);
+
+    // * PAGINATION INFO
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const totalPages = Math.ceil(totalDocuments / limit);
+
+    res.status(200).send({
+      success: true,
+      results: users,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        currentCountPerPage: users.length,
+        totalPerPage: limit,
+        totalDocuments,
+        hasNextPage: page < totalPages,
+      },
     });
   } catch (error) {
     next(error);

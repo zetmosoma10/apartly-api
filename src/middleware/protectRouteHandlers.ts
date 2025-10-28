@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import JwtPayload from "../entities/jwtPayload";
 import AppError from "../utils/AppError";
 import User from "../models/User";
+import { User as UserType } from "../entities/User";
 
 export const protectRoute: RequestHandler = async (req, res, next) => {
   try {
@@ -38,19 +39,28 @@ export const protectRoute: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const authorizeRoute: RequestHandler = async (
-  req,
-  res,
-  next
-) => {
-  const user = req.user;
+export const authorizeRoute: RequestHandler = async (req, res, next) => {
+  const user = req.user as UserType;
 
-  const selectedRoles = ['landlord','admin']
+  const selectedRoles = ["landlord", "admin"];
 
-  if (!selectedRoles.includes(user?.role!)) {
+  if (!selectedRoles.includes(user?.role)) {
     next(new AppError("Access denied", 403));
     return;
   }
 
   next();
+};
+
+export const adminRoute: RequestHandler = async (req, res, next) => {
+  try {
+    if (req.user?.role === "admin") {
+      next();
+      return;
+    }
+
+    next(new AppError("Access denied.", 403));
+  } catch (error) {
+    next(error);
+  }
 };
