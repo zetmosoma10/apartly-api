@@ -69,17 +69,19 @@ userSchema.pre("save", async function (next) {
 });
 
 // * GENERATE JWT
+type expInType = "1m" | "1d" | "2d";
+
 userSchema.methods.generateJwt = function (): string {
   return jwt.sign(
     {
       _id: this._id,
       firstName: this.firstName,
       lastName: this.lastName,
-      role: this.role
+      role: this.role,
     },
     env.APARTLY_JWT_SECRET!,
     {
-      expiresIn: "2d",
+      expiresIn: env.APARTLY_JWT_EXP as expInType,
     }
   );
 };

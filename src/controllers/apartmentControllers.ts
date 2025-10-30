@@ -391,3 +391,26 @@ export const getAllUserRelatedApartments: RequestHandler<{
     next(error);
   }
 };
+
+export const deleteUserRelatedApartment: RequestHandler<{
+  id: string;
+}> = async (req, res, next) => {
+  try {
+    const apartment = await Apartment.findById(req.params.id);
+    if (!apartment) {
+      next(new AppError("Apartment not found", 404));
+      return;
+    }
+
+    const images: { public_id: string }[] = apartment.images;
+    await Promise.allSettled(
+      images.map((img) => cloudinary.uploader.destroy(img.public_id))
+    );
+
+    await apartment.deleteOne();
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};

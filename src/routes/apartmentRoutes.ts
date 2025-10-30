@@ -10,6 +10,7 @@ import {
   addOrUpdateComment,
   addOrUpdateRating,
   getAllUserRelatedApartments,
+  deleteUserRelatedApartment,
 } from "../controllers/apartmentControllers";
 import { uploadApartmentImages } from "../configs/multer";
 import {
@@ -53,5 +54,14 @@ router
 router
   .route("/:id/admin")
   .get(protectRoute, adminRoute, validateObjectId, getAllUserRelatedApartments);
+
+router
+  .route("/user/:id/admin")
+  .delete(
+    protectRoute,
+    adminRoute,
+    validateObjectId,
+    deleteUserRelatedApartment
+  );
 
 export default router;
