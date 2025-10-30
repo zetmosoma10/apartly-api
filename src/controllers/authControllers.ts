@@ -3,7 +3,7 @@ import { loginSchema, userSchema } from "../validations/userSchemas";
 import AppError from "../utils/AppError";
 import User from "../models/User";
 import getUserFields from "../utils/getUserFields";
-import _ from "lodash"
+import _ from "lodash";
 
 export const register: RequestHandler = async (req, res, next) => {
   try {
@@ -47,7 +47,7 @@ export const login: RequestHandler = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: results.data.email }).select(
-      "+password"
+      "+password -avatar.public_id"
     );
     if (!user) {
       next(new AppError("Invalid email or password", 400));

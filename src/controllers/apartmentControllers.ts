@@ -58,7 +58,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
       .sort()
       .pagination();
 
-    const apartments = await features.mongooseQuery;
+    const apartments = await features.mongooseQuery.select("-images.public_id");
 
     // * Count total documents after applying filters & search (but before pagination)
     const totalDocuments = await Apartment.countDocuments(
@@ -97,7 +97,7 @@ export const getAllUserApartments: RequestHandler = async (req, res, next) => {
       .sort()
       .pagination();
 
-    const apartments = await features.mongooseQuery;
+    const apartments = await features.mongooseQuery.select("-images.public_id");
 
     // * Count total documents after applying filters & search (but before pagination)
     const totalDocuments = await Apartment.countDocuments({
@@ -134,8 +134,8 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 ) => {
   try {
     const apartment = await Apartment.findById(req.params.id)
-      .populate("landlord")
-      .populate("ratings.tenant");
+      .populate("landlord ratings.tenant")
+      .select("-images.public_id");
 
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
@@ -153,7 +153,10 @@ export const getApartment: RequestHandler<{ id: string }> = async (
 
 export const getFeatureApartments: RequestHandler = async (req, res, next) => {
   try {
-    const apartments = await Apartment.find().sort("-createdAt").limit(4);
+    const apartments = await Apartment.find()
+      .sort("-createdAt")
+      .limit(4)
+      .select("-images.public_id");
 
     res.status(200).send({
       success: true,
@@ -192,7 +195,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
       { _id: req.params.id, landlord: req.user?._id },
       results.data,
       { new: true, runValidators: true }
-    );
+    ).select("-images.public_id");
 
     if (!apartment) {
       next(new AppError("Apartment not found", 404));
@@ -248,10 +251,10 @@ export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
       return next(new AppError("Invalid input", 400, parsed.error.formErrors));
 
     const { rating } = parsed.data;
-    const apartment = await Apartment.findById(req.params.id).populate(
-      "ratings.tenant",
-      "firstName lastName createdAt avatar"
-    );
+    const apartment = await Apartment.findById(req.params.id)
+      .populate("ratings.tenant", "firstName lastName createdAt avatar")
+      .select("-images.public_id");
+
     if (!apartment) return next(new AppError("Apartment not found", 404));
 
     //* prevent landlord rating their own apartment
@@ -306,10 +309,10 @@ export const addOrUpdateComment: RequestHandler<{ id: string }> = async (
       return next(new AppError("Invalid input", 400, parsed.error.formErrors));
 
     const { comment } = parsed.data;
-    const apartment = await Apartment.findById(req.params.id).populate(
-      "ratings.tenant",
-      "firstName lastName createdAt avatar"
-    );
+    const apartment = await Apartment.findById(req.params.id)
+      .populate("ratings.tenant", "firstName lastName createdAt avatar")
+      .select("-images.public_id");
+
     if (!apartment) return next(new AppError("Apartment not found", 404));
 
     // * prevent landlord commenting on their own apartment? (optional)
@@ -362,7 +365,7 @@ export const getAllUserRelatedApartments: RequestHandler<{
       req.query
     ).pagination();
 
-    const apartments = await features.mongooseQuery;
+    const apartments = await features.mongooseQuery.select("-images.public_id");
 
     // * Count total documents after applying filters & search (but before pagination)
     const totalDocuments = await Apartment.countDocuments({

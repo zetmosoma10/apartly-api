@@ -15,7 +15,7 @@ import ApiFeatures from "../utils/ApiFeatures";
 
 export const getLoginUser: RequestHandler = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?._id).select("-avatar.public_id");
     if (!user) {
       next(new AppError("User not found.", 404));
       return;
@@ -50,7 +50,7 @@ export const updateMe: RequestHandler = async (req, res, next) => {
     const user = await User.findByIdAndUpdate(req.user?._id, results.data, {
       new: true,
       runValidators: true,
-    });
+    }).select("-avatar.public_id");
 
     if (!user) {
       next(new AppError("User not found", 404));
@@ -153,7 +153,7 @@ export const uploadAvatar: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    // * Delete old avatar if exisit
+    // * Delete old avatar if exist
     if (user.avatar.public_id) {
       await cloudinary.uploader.destroy(user.avatar.public_id);
     }
@@ -168,7 +168,11 @@ export const uploadAvatar: RequestHandler = async (req, res, next) => {
       url: results.secure_url,
       public_id: results.public_id,
     };
+
     await user.save();
+
+    // * dont send public_id
+    user.avatar.public_id = "";
 
     res.status(200).send({
       success: true,
@@ -214,7 +218,7 @@ export const getAllUsers: RequestHandler = async (req, res, next) => {
       req.query
     ).pagination();
 
-    const users = await features.mongooseQuery;
+    const users = await features.mongooseQuery.select("-avatar.public_id");
 
     // * Count total documents after applying filters & search (but before pagination)
     const totalDocuments = await User.countDocuments({
