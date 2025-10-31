@@ -36,7 +36,6 @@
     "@types/helmet": "^0.0.48",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.20",
-    "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.6.0",
