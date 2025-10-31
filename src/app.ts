@@ -32,9 +32,9 @@ app.use("/api/apartments", apartmentRoutes);
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use((req, res) => {
-  res.status(400).send({
+  res.status(404).send({
     success: false,
-    message: `Invalid path: ${req.path}`,
+    message: `Path: ${req.path} , not found`,
   });
 });
 app.use(globalErrorHandler);
