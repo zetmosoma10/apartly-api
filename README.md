@@ -2,7 +2,7 @@
 
 Apartly API is a RESTful backend built with **Node.js**, **Express + Typescript**, and **MongoDB** for managing apartment listings, users, landlords, tenants, and reviews.
 
-It powers the [Apartly Client](../apartly-client) frontend and provides secure endpoints for authentication, apartment management, filtering, and user interactions.
+It powers the [Apartly Client](https://github.com/zetmosoma10/apartly-client) frontend and provides secure endpoints for authentication, apartment management, filtering, and user interactions.
 
 ## 🚀 Features
 
