@@ -62,7 +62,7 @@ export const getAllApartments: RequestHandler = async (req, res, next) => {
 
     // * Count total documents after applying filters & search (but before pagination)
     const totalDocuments = await Apartment.countDocuments(
-      features.filtersApplied
+      features.filtersApplied,
     );
 
     // * PAGINATION INFO
@@ -91,7 +91,7 @@ export const getAllUserApartments: RequestHandler = async (req, res, next) => {
   try {
     const features = new ApiFeatures(
       Apartment.find({ landlord: req.user?._id }),
-      req.query
+      req.query,
     )
       .filter()
       .sort()
@@ -130,7 +130,7 @@ export const getAllUserApartments: RequestHandler = async (req, res, next) => {
 export const getApartment: RequestHandler<{ id: string }> = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
     const apartment = await Apartment.findById(req.params.id)
@@ -141,6 +141,13 @@ export const getApartment: RequestHandler<{ id: string }> = async (
       next(new AppError("Apartment not found", 404));
       return;
     }
+
+    apartment.ratings.sort((a, b) => {
+      const first = a.updatedAt as Date;
+      const second = b.updatedAt as Date;
+
+      return new Date(second).getTime() - new Date(first).getTime();
+    });
 
     res.status(200).send({
       success: true,
@@ -171,7 +178,7 @@ export const getFeatureApartments: RequestHandler = async (req, res, next) => {
 export const updateApartment: RequestHandler<{ id: string }> = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
     if (req.body?.images) {
@@ -194,7 +201,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
     const apartment = await Apartment.findOneAndUpdate(
       { _id: req.params.id, landlord: req.user?._id },
       results.data,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-images.public_id");
 
     if (!apartment) {
@@ -215,7 +222,7 @@ export const updateApartment: RequestHandler<{ id: string }> = async (
 export const deleteApartment: RequestHandler<{ id: string }> = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
     const apartment = await Apartment.findOne({
@@ -229,7 +236,7 @@ export const deleteApartment: RequestHandler<{ id: string }> = async (
 
     const images: { url: string; public_id: string }[] = apartment.images;
     await Promise.allSettled(
-      images.map((img) => cloudinary.uploader.destroy(img.public_id))
+      images.map((img) => cloudinary.uploader.destroy(img.public_id)),
     );
 
     await apartment.deleteOne();
@@ -243,16 +250,17 @@ export const deleteApartment: RequestHandler<{ id: string }> = async (
 export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
-    const parsed = ratingSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next(new AppError("Invalid input", 400, parsed.error.formErrors));
+    const results = ratingSchema.safeParse(req.body);
+    if (!results.success)
+      return next(new AppError("Invalid input", 400, results.error.formErrors));
 
-    const { rating } = parsed.data;
+    const { rating } = results.data;
     const apartment = await Apartment.findById(req.params.id)
       .populate("ratings.tenant", "firstName lastName createdAt avatar")
+      .populate("landlord")
       .select("-images.public_id");
 
     if (!apartment) return next(new AppError("Apartment not found", 404));
@@ -262,13 +270,13 @@ export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
       return next(new AppError("Cannot rate your own apartment", 400));
     }
 
-    const existing = apartment.ratings.find(
-      (r) => r.tenant?._id.toString() === req.user?._id?.toString()
+    const userRating = apartment.ratings.find(
+      (r) => r.tenant?._id.toString() === req.user?._id?.toString(),
     );
 
-    if (existing) {
+    if (userRating) {
       //* update only rating
-      existing.rating = rating;
+      userRating.rating = rating;
     } else {
       apartment.ratings.push({
         tenant: req.user?._id as Types.ObjectId,
@@ -284,11 +292,23 @@ export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
           (
             rated.reduce((acc, r) => acc + (r.rating as number), 0) /
             rated.length
-          ).toFixed(1)
+          ).toFixed(1),
         )
       : 0;
 
     await apartment.save();
+
+    apartment.ratings.sort((a, b) => {
+      const first = a.updatedAt as Date;
+      const second = b.updatedAt as Date;
+
+      return new Date(second).getTime() - new Date(first).getTime();
+    });
+
+    await apartment.populate(
+      "ratings.tenant",
+      "firstName lastName createdAt avatar",
+    );
 
     res
       .status(200)
@@ -301,32 +321,33 @@ export const addOrUpdateRating: RequestHandler<{ id: string }> = async (
 export const addOrUpdateComment: RequestHandler<{ id: string }> = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
-    const parsed = commentSchema.safeParse(req.body);
-    if (!parsed.success)
-      return next(new AppError("Invalid input", 400, parsed.error.formErrors));
+    const results = commentSchema.safeParse(req.body);
+    if (!results.success)
+      return next(new AppError("Invalid input", 400, results.error.formErrors));
 
-    const { comment } = parsed.data;
+    const { comment } = results.data;
     const apartment = await Apartment.findById(req.params.id)
       .populate("ratings.tenant", "firstName lastName createdAt avatar")
+      .populate("landlord")
       .select("-images.public_id");
 
     if (!apartment) return next(new AppError("Apartment not found", 404));
 
-    // * prevent landlord commenting on their own apartment? (optional)
+    // * prevent landlord commenting on their own apartment?
     if (apartment.landlord?.toString() === req.user?._id?.toString()) {
       return next(new AppError("Cannot comment on your own apartment", 400));
     }
 
-    const existing = apartment.ratings.find(
-      (r) => r.tenant?._id.toString() === req.user?._id?.toString()
+    const userRating = apartment.ratings.find(
+      (r) => r.tenant?._id.toString() === req.user?._id?.toString(),
     );
 
-    if (existing) {
+    if (userRating) {
       // update only comment
-      existing.comment = comment.trim();
+      userRating.comment = comment.trim();
     } else {
       apartment.ratings.push({
         tenant: req.user?._id as Types.ObjectId,
@@ -335,6 +356,18 @@ export const addOrUpdateComment: RequestHandler<{ id: string }> = async (
     }
 
     await apartment.save();
+
+    apartment.ratings.sort((a, b) => {
+      const first = a.updatedAt as Date;
+      const second = b.updatedAt as Date;
+
+      return new Date(second).getTime() - new Date(first).getTime();
+    });
+
+    await apartment.populate(
+      "ratings.tenant",
+      "firstName lastName createdAt avatar",
+    );
 
     res
       .status(200)
@@ -362,7 +395,7 @@ export const getAllUserRelatedApartments: RequestHandler<{
 
     const features = new ApiFeatures(
       Apartment.find({ landlord: user?._id }),
-      req.query
+      req.query,
     ).pagination();
 
     const apartments = await features.mongooseQuery.select("-images.public_id");
@@ -407,7 +440,7 @@ export const deleteUserRelatedApartment: RequestHandler<{
 
     const images: { public_id: string }[] = apartment.images;
     await Promise.allSettled(
-      images.map((img) => cloudinary.uploader.destroy(img.public_id))
+      images.map((img) => cloudinary.uploader.destroy(img.public_id)),
     );
 
     await apartment.deleteOne();

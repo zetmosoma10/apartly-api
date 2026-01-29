@@ -37,4 +37,6 @@ type Rating = {
   tenant: Types.ObjectId | UserDocument;
   rating?: number;
   comment?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
