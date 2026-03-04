@@ -11,6 +11,6 @@ const userRouter = Router();
 userRouter.route("/register").post(register);
 userRouter.route("/login").post(login);
 userRouter.route("/forgot-password").post(forgotPassword);
-userRouter.route("/reset-password").post(resetPassword);
+userRouter.route("/reset-password").patch(resetPassword);
 
 export default userRouter;
