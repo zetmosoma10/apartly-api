@@ -20,6 +20,7 @@ export const userSchema = z.object({
 
 export const loginSchema = userSchema.pick({ email: true, password: true });
 export const deleteProfileSchema = userSchema.pick({ password: true });
+export const forgotPasswordSchema = userSchema.pick({ email: true });
 
 export const updateMeSchema = z.object({
   firstName: z

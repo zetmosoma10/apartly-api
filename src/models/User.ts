@@ -4,6 +4,8 @@ import { UserDocument } from "../entities/UserDocument";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import dayjs from "dayjs";
+import crypto from "node:crypto";
 
 const userSchema = new Schema(
   {
@@ -54,8 +56,11 @@ const userSchema = new Schema(
       url: String,
       public_id: String,
     },
+    passwordChangedAt: Date,
+    passwordResetTokenExpire: Date,
+    passwordResetToken: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // * ENCRYPT THE PASSWORD
@@ -82,16 +87,30 @@ userSchema.methods.generateJwt = function (): string {
     env.APARTLY_JWT_SECRET!,
     {
       expiresIn: env.APARTLY_JWT_EXP as expInType,
-    }
+    },
   );
 };
 
 // * COMPARE PASSWORD
 userSchema.methods.isPasswordsTheSame = async function (
   password: string,
-  hashPassword: string
+  hashPassword: string,
 ): Promise<boolean> {
   return await bcrypt.compare(password, hashPassword);
+};
+
+// * GENERATE PASSWORD RESET TOKEN
+userSchema.methods.generateResetPasswordToken = function () {
+  const token = crypto.randomBytes(16).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  this.passwordResetTokenExpire = dayjs().add(15, "minutes");
+
+  return token;
 };
 
 const User = model<UserDocument>("User", userSchema);

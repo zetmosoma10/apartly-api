@@ -13,8 +13,10 @@ export type UserDocument = {
     public_id: string;
   };
   generateJwt: () => string;
+  generateResetPasswordToken: () => string;
+  passwordResetTokenExpire: Date;
   isPasswordsTheSame: (
     password: string,
-    hashedPassword: string
+    hashedPassword: string,
   ) => Promise<boolean>;
 };
