@@ -6,6 +6,7 @@ import AppError from "../utils/AppError";
 import User from "../models/User";
 import getUserFields from "../utils/getUserFields";
 import _ from "lodash";
+import WelcomeEmailTemplate from "../emails/welcomeEmail";
 
 const resend = new Resend(env.RESEND_API_KEY!);
 
@@ -32,10 +33,13 @@ export const register: RequestHandler = async (req, res, next) => {
     const editedUser = _.pick(user, getUserFields());
 
     const { error } = await resend.emails.send({
-      from: "no-reply@zetmosoma.dev",
-      to: user.email,
+      from: env.EMAIL_FROM!,
+      to: editedUser.email!,
       subject: "Welcome to Apartly!",
-      html: `<p>Welcome to Apartly, ${user.firstName}!</p>`,
+      html: WelcomeEmailTemplate({
+        firstName: editedUser.firstName,
+        email: editedUser.email,
+      }),
     });
 
     if (error) {
