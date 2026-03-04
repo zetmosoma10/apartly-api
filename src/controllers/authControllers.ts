@@ -125,7 +125,7 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
     const token = user.generateResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}&id=${user._id}`;
+    const url = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}&id=${user._id}`;
 
     // * SEND EMAIL
     const { error } = await resend.emails.send({
