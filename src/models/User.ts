@@ -56,7 +56,6 @@ const userSchema = new Schema(
       url: String,
       public_id: String,
     },
-    passwordChangedAt: Date,
     passwordResetTokenExpire: Date,
     passwordResetToken: String,
   },

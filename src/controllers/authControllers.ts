@@ -4,14 +4,19 @@ import { env } from "node:process";
 import {
   forgotPasswordSchema,
   loginSchema,
+  resetPasswordSchema,
   userSchema,
 } from "../validations/userSchemas";
+import mongoose from "mongoose";
+import crypto from "node:crypto";
 import AppError from "../utils/AppError";
 import User from "../models/User";
 import getUserFields from "../utils/getUserFields";
 import _ from "lodash";
 import WelcomeEmailTemplate from "../emails/welcomeEmail";
 import resetPasswordEmailTemplate from "../emails/resetPasswordEmail";
+import dayjs from "dayjs";
+import passwordResetSuccessEmailTemplate from "../emails/passwordResetSuccessEmail";
 
 const resend = new Resend(env.RESEND_API_KEY!);
 
@@ -137,6 +142,95 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
     res.status(200).send({
       success: true,
       message: "We've sent you reset link on your email.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword: RequestHandler<
+  {},
+  {},
+  {},
+  { token: string; id: string }
+> = async (req, res, next) => {
+  try {
+    // ****
+    const results = resetPasswordSchema.safeParse(req.body);
+    if (!results.success) {
+      next(new AppError("Invalid password", 400, results.error.format()));
+      return;
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.query.id)) {
+      next(new AppError(`Invalid objectId: ${req.query.id}`, 400));
+      return;
+    }
+
+    const user = await User.findById(req.query.id);
+    if (!user) {
+      next(new AppError("User not found", 404));
+      return;
+    }
+
+    const hashToken = crypto
+      .createHash("sha256")
+      .update(req.query.token)
+      .digest("hex");
+
+    if (user.passwordResetToken !== hashToken) {
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      next(
+        new AppError(
+          "Invalid token provided. Please request another token",
+          400,
+        ),
+      );
+      return;
+    }
+
+    if (dayjs().isAfter(user.passwordResetTokenExpire)) {
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      next(
+        new AppError(
+          "Reset link has expired. Please request another one.",
+          400,
+        ),
+      );
+      return;
+    }
+
+    user.password = results.data.password;
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpire = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    // * SEND CONFIRMATION EMAIL
+    const { error } = await resend.emails.send({
+      from: env.EMAIL_FROM!,
+      to: user.email!,
+      subject: "Reset password success",
+      html: passwordResetSuccessEmailTemplate(user),
+    });
+
+    if (error) {
+      console.error("Failed to send reset password email:", error);
+    }
+
+    const jwt = user.generateJwt();
+
+    const editedUser = _.pick(user, getUserFields());
+
+    res.status(200).send({
+      success: true,
+      token: jwt,
+      results: editedUser,
     });
   } catch (error) {
     next(error);

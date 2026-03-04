@@ -14,7 +14,9 @@ export type UserDocument = {
   };
   generateJwt: () => string;
   generateResetPasswordToken: () => string;
-  passwordResetTokenExpire: Date;
+  passwordResetTokenExpire?: Date;
+  passwordResetToken?: string;
+  updatedAt: Date;
   isPasswordsTheSame: (
     password: string,
     hashedPassword: string,
