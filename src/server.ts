@@ -5,7 +5,7 @@ import { env } from "process";
 import mongoose from "mongoose";
 
 async function main() {
-  const dbUrl = env.APARTLY_DATABASE_URL;
+  const dbUrl = env.LOCAL_DB_STR;
   if (!dbUrl)
     throw new Error("❌ Missing environment variable: APARTLY_DATABASE_URL");
 

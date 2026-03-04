@@ -1,9 +1,13 @@
+import { Resend } from "resend";
 import { RequestHandler } from "express";
+import { env } from "node:process";
 import { loginSchema, userSchema } from "../validations/userSchemas";
 import AppError from "../utils/AppError";
 import User from "../models/User";
 import getUserFields from "../utils/getUserFields";
 import _ from "lodash";
+
+const resend = new Resend(env.RESEND_API_KEY!);
 
 export const register: RequestHandler = async (req, res, next) => {
   try {
@@ -27,6 +31,17 @@ export const register: RequestHandler = async (req, res, next) => {
 
     const editedUser = _.pick(user, getUserFields());
 
+    const { error } = await resend.emails.send({
+      from: "no-reply@zetmosoma.dev",
+      to: user.email,
+      subject: "Welcome to Apartly!",
+      html: `<p>Welcome to Apartly, ${user.firstName}!</p>`,
+    });
+
+    if (error) {
+      console.error("Failed to send welcome email:", error);
+    }
+
     res.status(201).send({
       success: true,
       token,
@@ -47,7 +62,7 @@ export const login: RequestHandler = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: results.data.email }).select(
-      "+password -avatar.public_id"
+      "+password -avatar.public_id",
     );
     if (!user) {
       next(new AppError("Invalid email or password", 400));
@@ -57,7 +72,7 @@ export const login: RequestHandler = async (req, res, next) => {
 
     const isPasswordsTheSame = await user.isPasswordsTheSame(
       results.data.password,
-      user.password
+      user.password,
     );
     if (!isPasswordsTheSame) {
       next(new AppError("Invalid email or password", 400));
