@@ -4,7 +4,6 @@ import { UserDocument } from "../entities/UserDocument";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import dayjs from "dayjs";
 import crypto from "node:crypto";
 
 const userSchema = new Schema(
@@ -107,7 +106,7 @@ userSchema.methods.generateResetPasswordToken = function () {
     .update(token)
     .digest("hex");
 
-  this.passwordResetTokenExpire = dayjs().add(15, "minutes").toDate();
+  this.passwordResetTokenExpire = new Date(Date.now() + 15 * 60 * 1000);
 
   return token;
 };
